@@ -4,28 +4,30 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
-// Load environment variables
+// Initialize Workers
+import './services/emailQueue.js';
+import './services/refundWorker.js';
+
+// Import Routes
+import ingestionRoutes from './routes/ingestion.js';
+
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Standard Middleware
-app.use(helmet()); // Security headers
-app.use(cors()); // Enable Cross-Origin Resource Sharing
-app.use(morgan('dev')); // Request logging
-app.use(express.json()); // Parse JSON bodies
+app.use(helmet());
+app.use(cors());
+app.use(morgan('dev'));
+app.use(express.json());
 
-// Health Check Route
+// Main Ingestion API
+app.use('/api/ingest', ingestionRoutes);
+
 app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'active', 
-    service: 'FluxCore Backend',
-    timestamp: new Date().toISOString()
-  });
+  res.status(200).json({ status: 'FluxCore Active', timestamp: new Date() });
 });
 
-// Start Server
 app.listen(PORT, () => {
-  console.log(`🚀 FluxCore Server running on port ${PORT}`);
+  console.log(`🚀 FluxCore Multi-Agent System running on port ${PORT}`);
 });

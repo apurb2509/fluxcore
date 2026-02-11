@@ -3,13 +3,10 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const redisConfig = {
-  host: process.env.REDIS_HOST || '127.0.0.1',
-  port: process.env.REDIS_PORT || 6379,
-  maxRetriesPerRequest: null, // Required for BullMQ
-};
+// Standard connection logic using the Master Token URL
+export const connection = new Redis(process.env.REDIS_URL, {
+  maxRetriesPerRequest: null,
+});
 
-export const connection = new Redis(redisConfig);
-
-connection.on('connect', () => console.log('✅ Redis Connected'));
-connection.on('error', (err) => console.error('❌ Redis Error:', err));
+connection.on('connect', () => console.log('✅ FluxCore Memory: Redis Connected (Cloud)'));
+connection.on('error', (err) => console.error('❌ Redis Connection Error:', err.message));
