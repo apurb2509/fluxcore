@@ -2,31 +2,33 @@ import { Queue, Worker } from 'bullmq';
 import { connection } from '../config/redis.js';
 import { classifyEmail } from './classifierAgent.js';
 import { routeToDomain } from './domainRouter.js';
+import { PrismaClient } from '@prisma/client';
 
-export const emailQueue = new Queue('email-ingestion', { 
-  connection,
-  defaultJobOptions: {
-    attempts: 3,
-    backoff: { type: 'exponential', delay: 10000 } 
-  }
-});
+const db = new PrismaClient();
+export const emailQueue = new Queue('email-ingestion', { connection });
 
 const emailWorker = new Worker(
   'email-ingestion',
   async (job) => {
     const { from, subject, body } = job.data;
-    console.log(`📩 [Ingestion] Analyzing email from: ${from}`);
+    console.log(`📩 [Ingestion] Analyzing: ${from}`);
     
-    // 1. Call the Classifier Agent (Mistral via OpenRouter)
     const classification = await classifyEmail(subject, body);
-    console.log(`🤖 [AI] Decision: [${classification.category}]`);
 
-    // 2. Route to the correct Specialist Queue
+    // PERSIST TO MYSQL
+    await db.emailLog.create({
+      data: {
+        emailFrom: from,
+        subject,
+        body,
+        category: classification.category,
+        urgency: classification.urgency,
+        reason: classification.reason
+      }
+    });
+
     await routeToDomain(classification, job.data);
-    
     return classification;
   },
   { connection }
 );
-
-export default emailWorker;
