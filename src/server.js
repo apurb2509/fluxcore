@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import './services/orderWorker.js';
 
 // Initialize Workers
 import './services/emailQueue.js';
