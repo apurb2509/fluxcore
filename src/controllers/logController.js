@@ -1,20 +1,14 @@
-import express from 'express';
 import { PrismaClient } from '@prisma/client';
-
-const router = express.Router();
 const prisma = new PrismaClient();
 
-// Add this route to fetch logs for the dashboard
-router.get('/logs', async (req, res) => {
+export const getRecentLogs = async (req, res) => {
   try {
     const logs = await prisma.emailLog.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 20
+      take: 10,
+      orderBy: { createdAt: 'desc' }
     });
     res.json(logs);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch logs" });
   }
-});
-
-export default router;
+};
